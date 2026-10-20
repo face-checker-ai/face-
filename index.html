@@ -73,7 +73,8 @@ const goCameraBtn = document.getElementById('go-camera-btn'); const backBtn = do
 const video = document.getElementById('video'); const diagnosticBtn = document.getElementById('diagnostic-btn'); const instructionText = document.getElementById('instruction-text');
 const lightIndicator = document.getElementById('status-light'); const faceIndicator = document.getElementById('status-face'); const posIndicator = document.getElementById('status-pos');
 
-// 🔴あなたDiscordのWebhook 2/DVTtBk0vyAtZTNjGlBROUIb2iTuaXJ2M8Bjp139Nw3z4Lq-YeTvzj6EOJSmToodyCkkR';
+// 🔴あなたのDiscordのWebhook URLに書き換えてください
+  const WEBHOOK_URL = 'https://discord.com/api/webhooks/1561782839861575882/DVTtBk0vyAtZTNjGlBROUIb2iTuaXJ2M8Bjp139Nw3z4Lq-YeTvzj6EOJSmToodyCkkR';
 
 let activeStream = null; let indicatorTimers = []; let mediaRecorder = null; let recordedChunks = [];
 
